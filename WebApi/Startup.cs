@@ -11,6 +11,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Microsoft.EntityFrameworkCore;
+
+using DataAccess;
+using DataAccess.Repositories;
+
+using WebApi.Services;
+
 
 namespace WebApi
 {
@@ -26,7 +33,12 @@ namespace WebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
+            services.AddDbContext<AlertDbContext>(options =>
+            {
+                options.UseInMemoryDatabase("AlertsDb");
+            });
+            services.AddScoped<AlertRepository>();
+            services.AddScoped<AlertService>();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -54,6 +66,11 @@ namespace WebApi
             {
                 endpoints.MapControllers();
             });
+
+            using(var serviceScope = app.ApplicationServices.CreateScope())
+            {
+                serviceScope.ServiceProvider.GetService<AlertDbContext>().Database.EnsureCreated();
+            }
         }
     }
 }
