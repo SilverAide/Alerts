@@ -56,5 +56,21 @@ namespace DataAccess.Repositories
                 throw new ArgumentException("Couldn't find Alert to delete with that Id.", nameof(id));
             }
         }
+
+        public async Task<bool> DeleteExpiredAlerts()
+        {
+            var expiredAlerts = await _context.Alerts.Select(e => e).Where(e => DateTime.Now > e.Timestamp.AddDays(1)).ToListAsync();
+
+            if(expiredAlerts.Count > 0)
+            {
+                foreach (var alert in expiredAlerts)
+                {
+                    _context.Alerts.Remove(alert);
+                }
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            return false;
+        }
     }
 }
